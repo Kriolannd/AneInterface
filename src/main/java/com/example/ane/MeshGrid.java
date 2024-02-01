@@ -29,12 +29,7 @@ public class MeshGrid {
     }
 
     public void updateOnResize(double xSize, double ySize) {
-        mesh.clear();
-        for (int i = 0; i < xSize / 10; i++) {
-            for (int j = 0; j < ySize / 10; j++) {
-                this.add(new Dot(i * 10, j * 10, COLOR));
-            }
-        }
+        fill(xSize, ySize);
     }
 
     public void updateOnDrag(double deltaX, double deltaY, double xSize, double ySize) {
@@ -44,7 +39,6 @@ public class MeshGrid {
     }
 
     public void updateOnScroll(double delta, double xSize, double ySize) {
-        System.out.println(scrollPixelCount + delta);
         if (scrollPixelCount + delta <= MAX_SCROLL_PIXEL_COUNT && scrollPixelCount + delta >= 0) {
             scrollPixelCount += delta;
             if (spacing + (delta / 40) > 15) {
