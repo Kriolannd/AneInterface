@@ -9,13 +9,10 @@ public class MeshGrid {
     private final List<Dot> mesh = new ArrayList<>();
     private double spacing;
     private final Color COLOR;
-    private final double MAX_SCROLL_PIXEL_COUNT = 1000;
-    private double scrollPixelCount;
 
     MeshGrid(Color color, double xSize, double ySize) {
         COLOR = color;
         spacing = 10;
-        scrollPixelCount = 0;
         fill(xSize, ySize);
     };
 
@@ -39,21 +36,14 @@ public class MeshGrid {
     }
 
     public void updateOnScroll(double delta, double xSize, double ySize) {
-        if (scrollPixelCount + delta <= MAX_SCROLL_PIXEL_COUNT && scrollPixelCount + delta >= 0) {
-            scrollPixelCount += delta;
-            if (spacing + (delta / 40) > 15) {
-                spacing = 10;
-            } else if (spacing + (delta / 40) < 10) {
-                spacing = 15;
-            } else {
-                spacing += (delta / 40);
-            }
-            fill(xSize, ySize);
-        } else if (scrollPixelCount + delta > MAX_SCROLL_PIXEL_COUNT) {
-            scrollPixelCount = MAX_SCROLL_PIXEL_COUNT;
-        } else if (scrollPixelCount + delta < 0) {
-            scrollPixelCount = 0;
+        if (spacing + (delta / 40) > 15) {
+            spacing = 10;
+        } else if (spacing + (delta / 40) < 10) {
+            spacing = 15;
+        } else {
+            spacing += (delta / 40);
         }
+        fill(xSize, ySize);
     }
 
     public void add(Dot dot) {
