@@ -1,53 +1,35 @@
 package com.example.ane;
 
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 
-public class Dot {
-    private double x;
-    private double y;
+public class Dot extends Circle {
     private Color color;
 
-    Dot (double x, double y) {
-        this.x = x;
-        this.y = y;
+    Dot (double x, double y, double radius) {
+        super(x, y, radius);
     }
 
-    Dot(double x, double y, Color color) {
-        this(x, y);
+    Dot(double x, double y, double radius, Color color) {
+        this(x, y, radius);
         this.color = color;
     }
 
     public void updateOnDrag(double deltaX, double deltaY, double xSize, double ySize) {
-        if (this.x + deltaX > xSize) {
-            this.x += deltaX - xSize;
-        } else if (this.x + deltaX < 0) {
-            this.x += deltaX + xSize;
+        if (this.getCenterX() + deltaX > xSize) {
+            this.setCenterX(this.getCenterX() + deltaX - xSize);
+        } else if (this.getCenterX() + deltaX < 0) {
+            this.setCenterX(this.getCenterX() + deltaX + xSize);
         } else {
-            this.x += deltaX;
+            this.setCenterX(this.getCenterX() + deltaX);
         }
-        if (this.y + deltaY > ySize) {
-            this.y += deltaY - ySize;
-        } else if (this.y + deltaY < 0) {
-            this.y += deltaY + ySize;
+        if (this.getCenterY() + deltaY > ySize) {
+            this.setCenterY(this.getCenterY() + deltaY - ySize);
+        } else if (this.getCenterY() + deltaY < 0) {
+            this.setCenterY(this.getCenterY() + deltaY + ySize);
         } else {
-            this.y += deltaY;
+            this.setCenterY(this.getCenterY() + deltaY);
         }
-    }
-
-    public double getX() {
-        return x;
-    }
-
-    public void setX(double x) {
-        this.x = x;
-    }
-
-    public double getY() {
-        return y;
-    }
-
-    public void setY(double y) {
-        this.y = y;
     }
 
     public Color getColor() {
