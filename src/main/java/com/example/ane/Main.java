@@ -46,6 +46,7 @@ public class Main extends Application {
         canvas.setOnMouseReleased(canvas::onMouseReleased);
         canvas.setOnScroll(canvas::onMouseScroll);
         canvas.setOnMouseClicked(canvas::onMouseClicked);
+        canvas.setOnMousePressed(canvas::onMousePressed);
 
         return scene;
     };

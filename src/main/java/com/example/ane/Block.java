@@ -1,15 +1,16 @@
 package com.example.ane;
 
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 public class Block extends Rectangle {
     private boolean selected = false;
     private boolean isHovered = false;
-    private final Anchor topLeftAnchor;
-    private final Anchor topRightAnchor;
-    private final Anchor bottomLeftAnchor;
-    private final Anchor bottomRightAnchor;
+    private final Anchor leftAnchor;
+    private final Anchor rightAnchor;
+    private final Anchor topAnchor;
+    private final Anchor bottomAnchor;
     private final BorderRect borderRect;
     private double xBoundRadius;
     private double yBoundRadius;
@@ -18,53 +19,118 @@ public class Block extends Rectangle {
         super(x, y, width * scaleFactor, height * scaleFactor);
         this.xBoundRadius = xBoundRadius * scaleFactor;
         this.yBoundRadius = yBoundRadius * scaleFactor;
-        topLeftAnchor = new Anchor(this.getX(), this.getY(), 5 * scaleFactor, Color.YELLOW);
-        topRightAnchor = new Anchor(this.getX() + this.getWidth(), this.getY(), 5 * scaleFactor, Color.YELLOW);
-        bottomLeftAnchor = new Anchor(this.getX(), this.getY() + getHeight(), 5 * scaleFactor, Color.YELLOW);
-        bottomRightAnchor = new Anchor(this.getX() + this.getWidth(), this.getY() + this.getHeight(), 5 * scaleFactor, Color.YELLOW);
+        leftAnchor = new Anchor(x - 3 * scaleFactor, y + (height * scaleFactor * (1 - 0.7) / 2), 6 * scaleFactor, 0.7 * height * scaleFactor);
+        rightAnchor = new Anchor(x + (width - 3) * scaleFactor, y + (height * scaleFactor * (1 - 0.7) / 2), 6 * scaleFactor, 0.7 * height * scaleFactor);
+        topAnchor = new Anchor(x + (width * scaleFactor * (1 - 0.7) / 2), y - 3 * scaleFactor, 0.7 * width * scaleFactor, 6 * scaleFactor);
+        bottomAnchor = new Anchor(x + (width * scaleFactor * (1 - 0.7) / 2), y + (height - 3) * scaleFactor, 0.7 * width * scaleFactor, 6 * scaleFactor);
         borderRect = new BorderRect(x, y, width, height, xBoundRadius, yBoundRadius, scaleFactor);
+    }
+
+    public void draw(GraphicsContext gc) {
+        gc.setFill(Color.rgb(0, 50, 0));
+        borderRect.draw(gc);
+        if (this.isHovered() || this.isSelected()) {
+            gc.setFill(Color.rgb(137, 100, 148));
+            borderRect.draw(gc);
+            leftAnchor.draw(gc);
+            rightAnchor.draw(gc);
+            topAnchor.draw(gc);
+            bottomAnchor.draw(gc);
+        }
+
+        gc.setFill(Color.rgb(225, 225, 225));
+        gc.fillRoundRect(this.getX(), this.getY(), this.getWidth(), this.getHeight(),
+                this.getXBoundRadius(), this.getYBoundRadius());
     }
 
     public void updateOnDrag(double deltaX, double deltaY) {
         this.setX(this.getX() + deltaX);
         this.setY(this.getY() + deltaY);
-        topLeftAnchor.updateDeltaPosition(deltaX, deltaY);
-        topRightAnchor.updateDeltaPosition(deltaX, deltaY);
-        bottomLeftAnchor.updateDeltaPosition(deltaX, deltaY);
-        bottomRightAnchor.updateDeltaPosition(deltaX, deltaY);
+        leftAnchor.updateDeltaPosition(deltaX, deltaY);
+        rightAnchor.updateDeltaPosition(deltaX, deltaY);
+        topAnchor.updateDeltaPosition(deltaX, deltaY);
+        bottomAnchor.updateDeltaPosition(deltaX, deltaY);
         borderRect.updateDeltaPosition(deltaX, deltaY);
     }
 
-    public void updateOnScroll(double x, double y, double delta) {
+    public void updateOnScroll(double x, double y, double delta, double globalScaleFactor) {
         double scaleFactor = 1 + (delta / 40 / 10);
-        topLeftAnchor.updateSize(scaleFactor);
-        topRightAnchor.updateSize(scaleFactor);
-        bottomLeftAnchor.updateSize(scaleFactor);
-        bottomRightAnchor.updateSize(scaleFactor);
-        borderRect.updateSize(scaleFactor);
-        this.setWidth(this.getWidth() * scaleFactor);
-        this.setHeight(this.getHeight() * scaleFactor);
-        this.setXBoundRadius(this.getXBoundRadius() * scaleFactor);
-        this.setYBoundRadius(this.getYBoundRadius() * scaleFactor);
 
-        double xDistBlock = x - this.getX();
-        double newXDistBlock = scaleFactor * xDistBlock;
-        double yDistBlock = y - this.getY();
-        double newYDistBlock = scaleFactor * yDistBlock;
-        this.setX(x - newXDistBlock);
-        this.setY(y - newYDistBlock);
+        if (isGoodWidth(this.getWidth() * scaleFactor, globalScaleFactor) && isGoodHeight(this.getHeight() * scaleFactor, globalScaleFactor)) {
+            this.setWidth(this.getWidth() * scaleFactor);
+            this.setHeight(this.getHeight() * scaleFactor);
+            this.setXBoundRadius(this.getXBoundRadius() * scaleFactor);
+            this.setYBoundRadius(this.getYBoundRadius() * scaleFactor);
+            double xDistBlock = x - this.getX();
+            double newXDistBlock = scaleFactor * xDistBlock;
+            double yDistBlock = y - this.getY();
+            double newYDistBlock = scaleFactor * yDistBlock;
+            this.setX(x - newXDistBlock);
+            this.setY(y - newYDistBlock);
 
-        double xDistBound = x - borderRect.getX();
-        double newXDistBound = scaleFactor * xDistBound;
-        double yDistBound = y - borderRect.getY();
-        double newYDistBound = scaleFactor * yDistBound;
-        borderRect.updateAbsolutePosition(x - newXDistBound, y - newYDistBound);
-
-        topLeftAnchor.updateAbsolutePosition(this.getX(), this.getY());
-        topRightAnchor.updateAbsolutePosition(this.getX() + this.getWidth(), this.getY());
-        bottomLeftAnchor.updateAbsolutePosition(this.getX(), this.getY() + getHeight());
-        bottomRightAnchor.updateAbsolutePosition(this.getX() + this.getWidth(), this.getY() + this.getHeight());
+            leftAnchor.updateOnScroll(x, y, scaleFactor);
+            rightAnchor.updateOnScroll(x, y, scaleFactor);
+            topAnchor.updateOnScroll(x, y, scaleFactor);
+            bottomAnchor.updateOnScroll(x, y, scaleFactor);
+            borderRect.updateOnScroll(x, y, scaleFactor);
+        }
     }
+
+    public void resizeWithLeftAnchor(double deltaX, double globalScaleFactor) {
+        if (isGoodWidth(this.getWidth() - deltaX, globalScaleFactor)) {
+            this.setX(this.getX() + deltaX);
+            leftAnchor.updateDeltaPosition(deltaX, 0);
+            topAnchor.updateDeltaPosition(deltaX, 0);
+            bottomAnchor.updateDeltaPosition(deltaX, 0);
+            borderRect.updateDeltaPosition(deltaX, 0);
+
+            this.setWidth(this.getWidth() - deltaX);
+            topAnchor.setWidth(topAnchor.getWidth() - deltaX);
+            bottomAnchor.setWidth(bottomAnchor.getWidth() - deltaX);
+            borderRect.setWidth(borderRect.getWidth() - deltaX);
+        }
+    }
+
+    public void resizeWithRightAnchor(double deltaX, double globalScaleFactor) {
+        if (isGoodWidth(this.getWidth() + deltaX, globalScaleFactor)) {
+            rightAnchor.updateDeltaPosition(deltaX, 0);
+
+            this.setWidth(this.getWidth() + deltaX);
+            topAnchor.setWidth(topAnchor.getWidth() + deltaX);
+            bottomAnchor.setWidth(bottomAnchor.getWidth() + deltaX);
+            borderRect.setWidth(borderRect.getWidth() + deltaX);
+        }
+    }
+
+    public void resizeWithTopAnchor(double deltaY, double globalScaleFactor) {
+        if (isGoodHeight(this.getHeight() - deltaY, globalScaleFactor)) {
+            this.setY(this.getY() + deltaY);
+            leftAnchor.updateDeltaPosition(0, deltaY);
+            rightAnchor.updateDeltaPosition(0, deltaY);
+            topAnchor.updateDeltaPosition(0, deltaY);
+            borderRect.updateDeltaPosition(0, deltaY);
+
+            this.setHeight(this.getHeight() - deltaY);
+            leftAnchor.setHeight(leftAnchor.getHeight() - deltaY);
+            rightAnchor.setHeight(rightAnchor.getHeight() - deltaY);
+            borderRect.setHeight(borderRect.getHeight() - deltaY);
+        }
+    }
+
+    public void resizeWithBottomAnchor(double deltaY, double globalScaleFactor) {
+        if (isGoodHeight(this.getHeight() + deltaY, globalScaleFactor)) {
+            bottomAnchor.updateDeltaPosition(0, deltaY);
+
+            this.setHeight(this.getHeight() + deltaY);
+            leftAnchor.setHeight(leftAnchor.getHeight() + deltaY);
+            rightAnchor.setHeight(rightAnchor.getHeight() + deltaY);
+            borderRect.setHeight(borderRect.getHeight() + deltaY);
+        }
+    }
+
+    public boolean isGoodWidth(double width, double globalScaleFactor) {return width >= 50 * globalScaleFactor;}
+
+    public boolean isGoodHeight(double height, double globalScaleFactor) {return height >= 50 * globalScaleFactor;}
 
     public boolean isSelected() {
         return selected;
@@ -86,22 +152,6 @@ public class Block extends Rectangle {
         return borderRect;
     }
 
-    public Anchor getTopLeftAnchor() {
-        return topLeftAnchor;
-    }
-
-    public Anchor getTopRightAnchor() {
-        return topRightAnchor;
-    }
-
-    public Anchor getBottomLeftAnchor() {
-        return bottomLeftAnchor;
-    }
-
-    public Anchor getBottomRightAnchor() {
-        return bottomRightAnchor;
-    }
-
     public double getXBoundRadius() {
         return xBoundRadius;
     }
@@ -117,4 +167,12 @@ public class Block extends Rectangle {
     public void setYBoundRadius(double yBoundRadius) {
         this.yBoundRadius = yBoundRadius;
     }
+
+    public Anchor getLeftAnchor() {return leftAnchor;}
+
+    public Anchor getRightAnchor() {return rightAnchor;}
+
+    public Anchor getTopAnchor() {return topAnchor;}
+
+    public Anchor getBottomAnchor() {return bottomAnchor;}
 }

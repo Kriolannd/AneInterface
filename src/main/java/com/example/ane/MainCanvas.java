@@ -9,13 +9,12 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.paint.Color;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class MainCanvas extends Canvas {
     private boolean selected = false;
-    private double mouseX;
-    private double mouseY;
+    private double mousePrevX;
+    private double mousePrevY;
     private boolean locked = false;
     private double scrollCount;
     private double scaleFactor;
@@ -23,7 +22,6 @@ public class MainCanvas extends Canvas {
     private GraphicsContext gc;
     private MeshGrid meshGrid;
     private final List<Block> blocks = new ArrayList<Block>();
-    private final List<Block> selectedBlocks = new ArrayList<Block>();
     private final double MAX_SCROLL_COUNT = 25;
     MainCanvas(double width, double height) {
         super(width, height);
@@ -45,61 +43,51 @@ public class MainCanvas extends Canvas {
         gc.clearRect(0, 0, this.getWidth(), this.getHeight());
         gc.setFill(Color.rgb(220, 220, 220));
         gc.fillRect(0,0, this.getWidth(), this.getHeight());
-        List<Dot> mesh = meshGrid.getMesh();
 
-        mesh.forEach(dot -> {
-            gc.setFill(dot.getColor());
-            gc.fillOval(dot.getCenterX() - 1, dot.getCenterY() - 1, dot.getRadius() * 2, dot.getRadius() * 2);
-        });
-
+        meshGrid.draw(gc);
         blocks.forEach(block -> {
-            gc.setFill(Color.rgb(0, 50, 0));
-            BorderRect borderRect = block.getBorderRect();
-            gc.fillRoundRect(
-                    borderRect.getX(),
-                    borderRect.getY(),
-                    borderRect.getWidth(),
-                    borderRect.getHeight(),
-                    borderRect.getXBoundRadius(),
-                    borderRect.getYBoundRadius()
-            );
-            if (block.isHovered() || block.isSelected()) {
-                gc.setFill(Color.GREEN);
-                gc.fillRoundRect(
-                        borderRect.getX(),
-                        borderRect.getY(),
-                        borderRect.getWidth(),
-                        borderRect.getHeight(),
-                        borderRect.getXBoundRadius(),
-                        borderRect.getYBoundRadius()
-                );
-            }
-
-            gc.setFill(Color.rgb(225, 225, 225));
-            gc.fillRoundRect(block.getX(), block.getY(), block.getWidth(), block.getHeight(), block.getXBoundRadius(), block.getYBoundRadius());
+            block.draw(gc);
         });
     }
 
     public void onMouseMoved(MouseEvent mouseEvent) {
-        mouseX = mouseEvent.getX();
-        mouseY = mouseEvent.getY();
+        mousePrevX = mouseEvent.getX();
+        mousePrevY = mouseEvent.getY();
 
-        blocks.forEach(block -> {
-            block.setHovered(!locked && block.contains(mouseEvent.getX(), mouseEvent.getY()));
-        });
+        blocks.forEach(block -> {block.setHovered(false);});
+        List<Block> hoveredBlocks = blocks.stream().filter(block -> !locked && block.getBorderRect().contains(mouseEvent.getX(), mouseEvent.getY())).toList();
+        if (!hoveredBlocks.isEmpty()) {
+            Block hoveredBlock = hoveredBlocks.get(hoveredBlocks.size() - 1);
+            hoveredBlock.setHovered(true);
+            if (hoveredBlock.getLeftAnchor().contains(mouseEvent.getX(), mouseEvent.getY()) ||
+                    hoveredBlock.getRightAnchor().contains(mouseEvent.getX(), mouseEvent.getY())) {
+                this.setCursor(Cursor.H_RESIZE);
+            } else if (hoveredBlock.getTopAnchor().contains(mouseEvent.getX(), mouseEvent.getY()) ||
+                    hoveredBlock.getBottomAnchor().contains(mouseEvent.getX(), mouseEvent.getY())) {
+                this.setCursor(Cursor.V_RESIZE);
+            } else this.setCursor(Cursor.DEFAULT);
+        } else this.setCursor(Cursor.DEFAULT);
+    }
 
+    public void onMousePressed(MouseEvent mouseEvent) {
+        blocks.forEach(block -> {block.setSelected(false);});
+        List<Block> selectedBlocks = blocks.stream().filter(block -> block.getBorderRect().contains(mouseEvent.getX(), mouseEvent.getY())).toList();
+        if (!selectedBlocks.isEmpty()) {
+            Block selectedBlock = selectedBlocks.get(selectedBlocks.size() - 1);
+            Collections.swap(blocks, blocks.indexOf(selectedBlock), blocks.size() - 1);
+            selectedBlock.setSelected(true);
+        }
     }
 
     public void onMouseDragged(MouseEvent mouseEvent) {
         this.setCursor(Cursor.CLOSED_HAND);
-
-        selectedBlocks.forEach(block -> {
-            block.setSelected(false);
-        });
-        selectedBlocks.clear();
+        double mouseCurrentX = mouseEvent.getX();
+        double mouseCurrentY = mouseEvent.getY();
+        double deltaX = mouseCurrentX - mousePrevX;
+        double deltaY = mouseCurrentY - mousePrevY;
 
         blocks.forEach(block -> {
-            if (block.contains(mouseEvent.getX(), mouseEvent.getY()) || block.isSelected()) {
+            if (block.isHovered() || block.isSelected()) {
                 if (!locked) {
                     block.setSelected(true);
                     locked = true;
@@ -107,7 +95,25 @@ public class MainCanvas extends Canvas {
 
                 if (block.isSelected()) {
                     block.setHovered(true);
-                    block.updateOnDrag(mouseEvent.getX() - mouseX, mouseEvent.getY() - mouseY);
+                    if (block.getLeftAnchor().contains(mouseCurrentX, mouseCurrentY) || block.getLeftAnchor().isSelected()) {
+                        block.getLeftAnchor().setSelected(true);
+                        block.resizeWithLeftAnchor(deltaX, scaleFactor);
+                        this.setCursor(Cursor.H_RESIZE);
+                    } else if (block.getRightAnchor().contains(mouseCurrentX, mouseCurrentY) || block.getRightAnchor().isSelected()) {
+                        block.resizeWithRightAnchor(deltaX, scaleFactor);
+                        block.getRightAnchor().setSelected(true);
+                        this.setCursor(Cursor.H_RESIZE);
+                    } else if (block.getTopAnchor().contains(mouseCurrentX, mouseCurrentY) || block.getTopAnchor().isSelected()) {
+                        block.resizeWithTopAnchor(deltaY, scaleFactor);
+                        block.getTopAnchor().setSelected(true);
+                        this.setCursor(Cursor.V_RESIZE);
+                    } else if (block.getBottomAnchor().contains(mouseCurrentX, mouseCurrentY) || block.getBottomAnchor().isSelected()) {
+                        block.resizeWithBottomAnchor(deltaY, scaleFactor);
+                        block.getBottomAnchor().setSelected(true);
+                        this.setCursor(Cursor.V_RESIZE);
+                    } else {
+                        block.updateOnDrag(deltaX, deltaY);
+                    }
                 }
             }
         });
@@ -119,27 +125,29 @@ public class MainCanvas extends Canvas {
 
         if(selected) {
             meshGrid.updateOnDrag(
-                    mouseEvent.getX() - mouseX,
-                    mouseEvent.getY() - mouseY,
+                    deltaX,
+                    deltaY,
                     this.getWidth(),
                     this.getHeight()
             );
 
             blocks.forEach(block -> {
-                block.updateOnDrag(mouseEvent.getX() - mouseX, mouseEvent.getY() - mouseY);
+                block.updateOnDrag(deltaX, deltaY);
             });
         }
 
-        mouseX = mouseEvent.getX();
-        mouseY = mouseEvent.getY();
+        mousePrevX = mouseCurrentX;
+        mousePrevY = mouseCurrentY;
     }
 
     public void onMouseReleased(MouseEvent mouseEvent) {
         this.setCursor(Cursor.DEFAULT);
         blocks.forEach(block -> {
-            if (block.isSelected()) {
-                block.setSelected(false);
-            }
+            block.setSelected(false);
+            block.getLeftAnchor().setSelected(false);
+            block.getRightAnchor().setSelected(false);
+            block.getTopAnchor().setSelected(false);
+            block.getBottomAnchor().setSelected(false);
         });
         this.setSelected(false);
         locked = false;
@@ -151,7 +159,7 @@ public class MainCanvas extends Canvas {
             scrollCount += (delta / 40);
             scaleFactor *= (1 + (delta / 40 / 10));
             blocks.forEach(block -> {
-                block.updateOnScroll(scrollEvent.getX(), scrollEvent.getY(), delta);
+                block.updateOnScroll(scrollEvent.getX(), scrollEvent.getY(), delta, scaleFactor);
             });
             meshGrid.updateOnScroll(delta, this.getWidth(), this.getHeight());
         } else if (scrollCount + (delta / 40) > MAX_SCROLL_COUNT) {
@@ -167,21 +175,16 @@ public class MainCanvas extends Canvas {
                 Block block = new Block(mouseEvent.getX(), mouseEvent.getY(), 100, 100, 20, 20, scaleFactor);
                 block.setSelected(true);
                 blocks.add(block);
-                selectedBlocks.add(block);
             }
         }
 
-        selectedBlocks.forEach(block -> {
-            block.setSelected(false);
-        });
-        selectedBlocks.clear();
-
-        blocks.forEach(block -> {
-            if (block.contains(mouseEvent.getX(), mouseEvent.getY())) {
-                block.setSelected(true);
-                selectedBlocks.add(block);
-            }
-        });
+        blocks.forEach(block -> {block.setSelected(false);});
+        List<Block> selectedBlocks = blocks.stream().filter(block -> block.getBorderRect().contains(mouseEvent.getX(), mouseEvent.getY())).toList();
+        if (!selectedBlocks.isEmpty()) {
+            Block selectedBlock = selectedBlocks.get(selectedBlocks.size() - 1);
+            Collections.swap(blocks, blocks.indexOf(selectedBlock), blocks.size() - 1);
+            selectedBlock.setSelected(true);
+        }
     }
 
     public boolean isSelected() {

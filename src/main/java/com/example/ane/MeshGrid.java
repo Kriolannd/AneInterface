@@ -1,5 +1,6 @@
 package com.example.ane;
 
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
@@ -17,6 +18,13 @@ public class MeshGrid {
         dotRadius = radius;
         fill(xSize, ySize);
     };
+
+    public void draw(GraphicsContext gc) {
+        mesh.forEach(dot -> {
+            gc.setFill(dot.getColor());
+            gc.fillOval(dot.getCenterX() - 1, dot.getCenterY() - 1, dot.getRadius() * 2, dot.getRadius() * 2);
+        });
+    }
 
     public void fill(double xSize, double ySize) {
         mesh.clear();
