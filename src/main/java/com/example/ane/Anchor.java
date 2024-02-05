@@ -13,7 +13,7 @@ public class Anchor extends Rectangle implements Update{
     }
 
     public void draw(GraphicsContext gc) {
-        gc.setFill(Color.BLACK);
+        gc.setFill(Color.rgb(61, 140, 57));
         gc.fillRect(this.getX(), this.getY(), this.getWidth(), this.getHeight());
     }
 

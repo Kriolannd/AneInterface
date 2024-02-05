@@ -22,7 +22,7 @@ public class MeshGrid {
     public void draw(GraphicsContext gc) {
         mesh.forEach(dot -> {
             gc.setFill(dot.getColor());
-            gc.fillOval(dot.getCenterX() - 1, dot.getCenterY() - 1, dot.getRadius() * 2, dot.getRadius() * 2);
+            gc.fillOval(dot.getCenterX() - dot.getRadius(), dot.getCenterY() - dot.getRadius(), dot.getRadius() * 2, dot.getRadius() * 2);
         });
     }
 
@@ -41,8 +41,17 @@ public class MeshGrid {
 
     public void updateOnDrag(double deltaX, double deltaY, double xSize, double ySize) {
         mesh.forEach(dot -> {
-            dot.updateOnDrag(deltaX, deltaY, xSize, ySize);
+            dot.updateOnDrag(deltaX, deltaY, xSize, ySize, spacing);
         });
+        boolean shouldBeUpdated = mesh.stream().anyMatch(dot -> dot.getCenterX() > xSize ||
+                dot.getCenterX() < 0 ||
+                dot.getCenterY() > ySize ||
+                dot.getCenterY() < 0
+        );
+
+        if (shouldBeUpdated) {
+            fill(xSize, ySize);
+        }
     }
 
     public void updateOnScroll(double delta, double xSize, double ySize) {

@@ -30,6 +30,7 @@ public class MainCanvas extends Canvas {
         gc = MainCanvas.this.getGraphicsContext2D();
         meshGrid = new MeshGrid(1280, 720, 1, Color.GREEN);
 
+
         timer = new AnimationTimer() {
             @Override
             public void handle(long l) {
@@ -70,31 +71,36 @@ public class MainCanvas extends Canvas {
     }
 
     public void onMousePressed(MouseEvent mouseEvent) {
-        blocks.forEach(block -> {block.setSelected(false);});
-        List<Block> selectedBlocks = blocks.stream().filter(block -> block.getBorderRect().contains(mouseEvent.getX(), mouseEvent.getY())).toList();
-        if (!selectedBlocks.isEmpty()) {
-            Block selectedBlock = selectedBlocks.get(selectedBlocks.size() - 1);
-            Collections.swap(blocks, blocks.indexOf(selectedBlock), blocks.size() - 1);
-            selectedBlock.setSelected(true);
+        if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
+            blocks.forEach(block -> {
+                block.setSelected(false);
+            });
+            List<Block> selectedBlocks = blocks.stream().filter(block -> block.getBorderRect().contains(mouseEvent.getX(), mouseEvent.getY())).toList();
+            if (!selectedBlocks.isEmpty()) {
+                Block selectedBlock = selectedBlocks.get(selectedBlocks.size() - 1);
+                Collections.swap(blocks, blocks.indexOf(selectedBlock), blocks.size() - 1);
+                selectedBlock.setSelected(true);
+            }
         }
     }
 
     public void onMouseDragged(MouseEvent mouseEvent) {
-        this.setCursor(Cursor.CLOSED_HAND);
-        double mouseCurrentX = mouseEvent.getX();
-        double mouseCurrentY = mouseEvent.getY();
-        double deltaX = mouseCurrentX - mousePrevX;
-        double deltaY = mouseCurrentY - mousePrevY;
+        if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
+            this.setCursor(Cursor.CLOSED_HAND);
+            double mouseCurrentX = mouseEvent.getX();
+            double mouseCurrentY = mouseEvent.getY();
+            double deltaX = mouseCurrentX - mousePrevX;
+            double deltaY = mouseCurrentY - mousePrevY;
 
-        blocks.forEach(block -> {
-            if (block.isHovered() || block.isSelected()) {
-                if (!locked) {
-                    block.setSelected(true);
-                    locked = true;
-                }
+            blocks.forEach(block -> {
+                if (block.isHovered() || block.isSelected()) {
+                    if (!locked) {
+                        block.setSelected(true);
+                        locked = true;
+                    }
 
-                if (block.isSelected()) {
                     block.setHovered(true);
+
                     if (block.getLeftAnchor().contains(mouseCurrentX, mouseCurrentY) || block.getLeftAnchor().isSelected()) {
                         block.getLeftAnchor().setSelected(true);
                         block.resizeWithLeftAnchor(deltaX, scaleFactor);
@@ -115,29 +121,29 @@ public class MainCanvas extends Canvas {
                         block.updateOnDrag(deltaX, deltaY);
                     }
                 }
-            }
-        });
-
-        if (!locked) {
-            this.setSelected(true);
-            locked = true;
-        }
-
-        if(selected) {
-            meshGrid.updateOnDrag(
-                    deltaX,
-                    deltaY,
-                    this.getWidth(),
-                    this.getHeight()
-            );
-
-            blocks.forEach(block -> {
-                block.updateOnDrag(deltaX, deltaY);
             });
-        }
 
-        mousePrevX = mouseCurrentX;
-        mousePrevY = mouseCurrentY;
+            if (!locked) {
+                this.setSelected(true);
+                locked = true;
+            }
+
+            if (selected) {
+                meshGrid.updateOnDrag(
+                        deltaX,
+                        deltaY,
+                        this.getWidth(),
+                        this.getHeight()
+                );
+
+                blocks.forEach(block -> {
+                    block.updateOnDrag(deltaX, deltaY);
+                });
+            }
+
+            mousePrevX = mouseCurrentX;
+            mousePrevY = mouseCurrentY;
+        }
     }
 
     public void onMouseReleased(MouseEvent mouseEvent) {
@@ -176,14 +182,14 @@ public class MainCanvas extends Canvas {
                 block.setSelected(true);
                 blocks.add(block);
             }
-        }
 
-        blocks.forEach(block -> {block.setSelected(false);});
-        List<Block> selectedBlocks = blocks.stream().filter(block -> block.getBorderRect().contains(mouseEvent.getX(), mouseEvent.getY())).toList();
-        if (!selectedBlocks.isEmpty()) {
-            Block selectedBlock = selectedBlocks.get(selectedBlocks.size() - 1);
-            Collections.swap(blocks, blocks.indexOf(selectedBlock), blocks.size() - 1);
-            selectedBlock.setSelected(true);
+            blocks.forEach(block -> {block.setSelected(false);});
+            List<Block> selectedBlocks = blocks.stream().filter(block -> block.getBorderRect().contains(mouseEvent.getX(), mouseEvent.getY())).toList();
+            if (!selectedBlocks.isEmpty()) {
+                Block selectedBlock = selectedBlocks.get(selectedBlocks.size() - 1);
+                Collections.swap(blocks, blocks.indexOf(selectedBlock), blocks.size() - 1);
+                selectedBlock.setSelected(true);
+            }
         }
     }
 

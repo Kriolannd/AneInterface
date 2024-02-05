@@ -4,6 +4,9 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Block extends Rectangle {
     private boolean selected = false;
     private boolean isHovered = false;
@@ -11,6 +14,7 @@ public class Block extends Rectangle {
     private final Anchor rightAnchor;
     private final Anchor topAnchor;
     private final Anchor bottomAnchor;
+    private final List<Anchor> anchors = new ArrayList<Anchor>();
     private final BorderRect borderRect;
     private double xBoundRadius;
     private double yBoundRadius;
@@ -19,10 +23,14 @@ public class Block extends Rectangle {
         super(x, y, width * scaleFactor, height * scaleFactor);
         this.xBoundRadius = xBoundRadius * scaleFactor;
         this.yBoundRadius = yBoundRadius * scaleFactor;
-        leftAnchor = new Anchor(x - 3 * scaleFactor, y + (height * scaleFactor * (1 - 0.7) / 2), 6 * scaleFactor, 0.7 * height * scaleFactor);
-        rightAnchor = new Anchor(x + (width - 3) * scaleFactor, y + (height * scaleFactor * (1 - 0.7) / 2), 6 * scaleFactor, 0.7 * height * scaleFactor);
-        topAnchor = new Anchor(x + (width * scaleFactor * (1 - 0.7) / 2), y - 3 * scaleFactor, 0.7 * width * scaleFactor, 6 * scaleFactor);
-        bottomAnchor = new Anchor(x + (width * scaleFactor * (1 - 0.7) / 2), y + (height - 3) * scaleFactor, 0.7 * width * scaleFactor, 6 * scaleFactor);
+        leftAnchor = new Anchor(x - 3 * scaleFactor, y + (height * scaleFactor * (1 - 0.7) / 2), 3 * scaleFactor, 0.7 * height * scaleFactor);
+        rightAnchor = new Anchor(x + width * scaleFactor, y + (height * scaleFactor * (1 - 0.7) / 2), 3 * scaleFactor, 0.7 * height * scaleFactor);
+        topAnchor = new Anchor(x + (width * scaleFactor * (1 - 0.7) / 2), y - 3 * scaleFactor, 0.7 * width * scaleFactor, 3 * scaleFactor);
+        bottomAnchor = new Anchor(x + (width * scaleFactor * (1 - 0.7) / 2), y + height * scaleFactor, 0.7 * width * scaleFactor, 3 * scaleFactor);
+        anchors.add(leftAnchor);
+        anchors.add(rightAnchor);
+        anchors.add(topAnchor);
+        anchors.add(bottomAnchor);
         borderRect = new BorderRect(x, y, width, height, xBoundRadius, yBoundRadius, scaleFactor);
     }
 
@@ -30,7 +38,7 @@ public class Block extends Rectangle {
         gc.setFill(Color.rgb(0, 50, 0));
         borderRect.draw(gc);
         if (this.isHovered() || this.isSelected()) {
-            gc.setFill(Color.rgb(137, 100, 148));
+            gc.setFill(Color.rgb(61, 140, 57));
             borderRect.draw(gc);
             leftAnchor.draw(gc);
             rightAnchor.draw(gc);
@@ -38,7 +46,8 @@ public class Block extends Rectangle {
             bottomAnchor.draw(gc);
         }
 
-        gc.setFill(Color.rgb(225, 225, 225));
+        gc.setFill(new Color(0.86, 0.86, 0.86, 0.85));
+        //gc.setFill(Color.rgb(225, 225, 225));
         gc.fillRoundRect(this.getX(), this.getY(), this.getWidth(), this.getHeight(),
                 this.getXBoundRadius(), this.getYBoundRadius());
     }
@@ -175,4 +184,6 @@ public class Block extends Rectangle {
     public Anchor getTopAnchor() {return topAnchor;}
 
     public Anchor getBottomAnchor() {return bottomAnchor;}
+
+    public List<Anchor> getAnchors() {return anchors;}
 }
