@@ -9,7 +9,10 @@ import java.util.List;
 
 public class Block extends Rectangle {
     private boolean selected = false;
-    private boolean isHovered = false;
+    private boolean hovered = false;
+    private Color blockColor = new Color(0.86, 0.86, 0.86, 0.85);
+    private Color blockBorderColor = Color.rgb(0, 50, 0);
+    private Color blockAnchorColor = Color.rgb(61, 140, 57);
     private final Anchor leftAnchor;
     private final Anchor rightAnchor;
     private final Anchor topAnchor;
@@ -18,9 +21,13 @@ public class Block extends Rectangle {
     private final BorderRect borderRect;
     private double xBoundRadius;
     private double yBoundRadius;
+    private double interX;
+    private double interY;
 
     Block(double x, double y, double width, double height, double xBoundRadius, double yBoundRadius, double scaleFactor) {
         super(x, y, width * scaleFactor, height * scaleFactor);
+        this.interX = x;
+        this.interY = y;
         this.xBoundRadius = xBoundRadius * scaleFactor;
         this.yBoundRadius = yBoundRadius * scaleFactor;
         leftAnchor = new Anchor(x - 3 * scaleFactor, y + (height * scaleFactor * (1 - 0.7) / 2), 3 * scaleFactor, 0.7 * height * scaleFactor);
@@ -35,10 +42,10 @@ public class Block extends Rectangle {
     }
 
     public void draw(GraphicsContext gc) {
-        gc.setFill(Color.rgb(0, 50, 0));
+        gc.setFill(blockBorderColor);
         borderRect.draw(gc);
-        if (this.isHovered() || this.isSelected()) {
-            gc.setFill(Color.rgb(61, 140, 57));
+        if (hovered || selected) {
+            gc.setFill(blockAnchorColor);
             borderRect.draw(gc);
             leftAnchor.draw(gc);
             rightAnchor.draw(gc);
@@ -46,13 +53,12 @@ public class Block extends Rectangle {
             bottomAnchor.draw(gc);
         }
 
-        gc.setFill(new Color(0.86, 0.86, 0.86, 0.85));
-        //gc.setFill(Color.rgb(225, 225, 225));
+        gc.setFill(blockColor);
         gc.fillRoundRect(this.getX(), this.getY(), this.getWidth(), this.getHeight(),
                 this.getXBoundRadius(), this.getYBoundRadius());
     }
 
-    public void updateOnDrag(double deltaX, double deltaY) {
+    public void updateOnCanvasDrag(double deltaX, double deltaY) {
         this.setX(this.getX() + deltaX);
         this.setY(this.getY() + deltaY);
         leftAnchor.updateDeltaPosition(deltaX, deltaY);
@@ -62,8 +68,27 @@ public class Block extends Rectangle {
         borderRect.updateDeltaPosition(deltaX, deltaY);
     }
 
+    public void updateOnDrag(double deltaX, double deltaY, double spacing) {
+        interX += deltaX;
+        interY += deltaY;
+        int timesX = (int) ((interX - this.getX()) / spacing);
+        int timesY = (int) ((interY - this.getY()) / spacing);
+        this.setX(this.getX() + spacing * timesX);
+        this.setY(this.getY() + spacing * timesY);
+        leftAnchor.updateDeltaPosition(spacing * timesX, spacing * timesY);
+        rightAnchor.updateDeltaPosition(spacing * timesX, spacing * timesY);
+        topAnchor.updateDeltaPosition(spacing * timesX, spacing * timesY);
+        bottomAnchor.updateDeltaPosition(spacing * timesX, spacing * timesY);
+        borderRect.updateDeltaPosition(spacing * timesX, spacing * timesY);
+    }
+
     public void updateOnScroll(double x, double y, double delta, double globalScaleFactor) {
-        double scaleFactor = 1 + (delta / 40 / 10);
+        double scaleFactor;
+        if (delta > 0) {
+            scaleFactor = (1 + (delta / 40 / 10));
+        } else {
+            scaleFactor = 1 / (1 - (delta / 40 / 10));
+        }
 
         if (isGoodWidth(this.getWidth() * scaleFactor, globalScaleFactor) && isGoodHeight(this.getHeight() * scaleFactor, globalScaleFactor)) {
             this.setWidth(this.getWidth() * scaleFactor);
@@ -76,6 +101,8 @@ public class Block extends Rectangle {
             double newYDistBlock = scaleFactor * yDistBlock;
             this.setX(x - newXDistBlock);
             this.setY(y - newYDistBlock);
+            this.setInterX(this.getX());
+            this.setInterY(this.getY());
 
             leftAnchor.updateOnScroll(x, y, scaleFactor);
             rightAnchor.updateOnScroll(x, y, scaleFactor);
@@ -150,11 +177,11 @@ public class Block extends Rectangle {
     }
 
     public boolean isHovered() {
-        return isHovered;
+        return hovered;
     }
 
     public void setHovered(boolean hovered) {
-        isHovered = hovered;
+        this.hovered = hovered;
     }
 
     public BorderRect getBorderRect() {
@@ -186,4 +213,18 @@ public class Block extends Rectangle {
     public Anchor getBottomAnchor() {return bottomAnchor;}
 
     public List<Anchor> getAnchors() {return anchors;}
+
+    public void setBlockColor(Color blockColor) {this.blockColor = blockColor;}
+
+    public void setBlockBorderColor(Color blockBorderColor) {this.blockBorderColor = blockBorderColor;}
+
+    public void setBlockAnchorColor(Color blockAnchorColor) {this.blockAnchorColor = blockAnchorColor;}
+
+    public double getInterX() {return interX;}
+
+    public void setInterX(double interX) {this.interX = interX;}
+
+    public double getInterY() {return interY;}
+
+    public void setInterY(double interY) {this.interY = interY;}
 }

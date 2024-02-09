@@ -10,8 +10,8 @@ public class BorderRect extends Rectangle implements Update {
     BorderRect(double x, double y, double width, double height, double xBoundRadius, double yBoundRadius, double scaleFactor) {
         super(x - 3 * scaleFactor, y - 3 * scaleFactor, (width + 6) * scaleFactor, (height + 6) * scaleFactor);
         lineWidth = 3 * scaleFactor;
-        this.xBoundRadius = xBoundRadius * (width + 8) / width * scaleFactor;
-        this.yBoundRadius = yBoundRadius * (height + 8) / height * scaleFactor;
+        this.xBoundRadius = xBoundRadius * (width + 6) / width * scaleFactor;
+        this.yBoundRadius = yBoundRadius * (height + 6) / height * scaleFactor;
     }
 
     public void draw(GraphicsContext gc) {

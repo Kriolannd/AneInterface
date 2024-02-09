@@ -8,6 +8,8 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.*;
 
 public class Main extends Application {
+    private static final double INITIAL_WIDTH = 1280;
+    private static final double INITIAL_HEIGHT = 720;
     public static void main(String[] args) {
         launch();
     }
@@ -19,9 +21,9 @@ public class Main extends Application {
     }
 
     public Scene createScene() {
-        MainCanvas canvas = new MainCanvas(1280, 720);
+        MainCanvas canvas = new MainCanvas(INITIAL_WIDTH, INITIAL_HEIGHT);
         AnchorPane root = new AnchorPane(canvas);
-        root.setPrefSize(1280, 720);
+        root.setPrefSize(INITIAL_WIDTH, INITIAL_HEIGHT);
         Scene scene = new Scene(root);
 
         scene.widthProperty().addListener(new ChangeListener<Number>() {
@@ -29,7 +31,7 @@ public class Main extends Application {
             public void changed(ObservableValue<? extends Number> observableValue, Number oldValue, Number newValue) {
                 root.setPrefWidth(newValue.doubleValue());
                 canvas.setWidth(newValue.doubleValue());
-                canvas.getMeshGrid().updateOnResize(canvas.getWidth(), canvas.getHeight());
+                canvas.getMesh().updateOnResize(canvas.getWidth(), canvas.getHeight());
             }
         });
         scene.heightProperty().addListener(new ChangeListener<Number>() {
@@ -37,7 +39,7 @@ public class Main extends Application {
             public void changed(ObservableValue<? extends Number> observableValue, Number oldValue, Number newValue) {
                 root.setPrefHeight(newValue.doubleValue());
                 canvas.setHeight(newValue.doubleValue());
-                canvas.getMeshGrid().updateOnResize(canvas.getWidth(), canvas.getHeight());
+                canvas.getMesh().updateOnResize(canvas.getWidth(), canvas.getHeight());
             }
         });
 
@@ -47,6 +49,8 @@ public class Main extends Application {
         canvas.setOnScroll(canvas::onMouseScroll);
         canvas.setOnMouseClicked(canvas::onMouseClicked);
         canvas.setOnMousePressed(canvas::onMousePressed);
+        canvas.requestFocus();
+        canvas.setOnKeyPressed(canvas::onKeyPressed);
 
         return scene;
     };

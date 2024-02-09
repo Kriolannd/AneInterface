@@ -7,13 +7,12 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
 public class Anchor extends Rectangle implements Update{
-    private boolean selected;
+    private boolean selected = false;
     Anchor(double x, double y, double width, double height) {
         super(x, y, width, height);
     }
 
     public void draw(GraphicsContext gc) {
-        gc.setFill(Color.rgb(61, 140, 57));
         gc.fillRect(this.getX(), this.getY(), this.getWidth(), this.getHeight());
     }
 
